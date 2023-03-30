@@ -1,71 +1,63 @@
 #include <stdio.h>
-#include <omp.h>
 #include <locale.h>
+#include <omp.h>
+#include <stdlib.h>
 
-// Escreva um programa concorrente (em C com OpenMP), que calcula a aproximação do valor de pi.
+// Exercício 2: Aproximação do PI
+// OpenMP: Redução (Reduction)
 #define STEPS 100000000
 
-void pi_Serial() {
-    setlocale(LC_ALL, "Portuguese");
-
+double pi_sequencial() {
     int i;
-    double pi, x, num_x, sum = 0.0;
+    double step, x, pi, sum = 0.0;
     double start, end, time;
-
+    
+    printf("Iniciando método sequencial...\n");
     start = omp_get_wtime();
-    num_x = 1.0/(double)STEPS;
+    step = 1.0/(double)STEPS;
 
     for(i = 0; i < STEPS; i++) {
-        x = i * num_x; //x = (a + i) * num_x (Largura)
-        sum = sum + 4.0 / (1.0 + x*x); // Área
+        x = i * step;
+        sum = sum + 4.0/(1.0 + x * x);
     }
-    pi = num_x * sum;
-
-    end = omp_get_wtime(); 
+    pi = step * sum;
+    
+    end = omp_get_wtime();
     time = end - start;
-    printf("Valor de Pi: %f\n", pi);
-    printf("Serial time: %f\n\n", time);
-
+    printf("Pi: %f\n", pi);
+    printf("Tempo Sequencial: %f\n\n", time);
+    return time;
 }
 
-double pi_Parallel() {
-    setlocale(LC_ALL, "Portuguese");
-
-    int i, num_procs = omp_get_num_procs();
-    double pi, x, num_x, sum = 0.0;
+double pi_paralelo() {
+    int i;
+    double step, x, pi, sum = 0.0;
     double start, end, time;
-
-    printf("Número de Threads: %d\n", num_procs);
-    start = omp_get_wtime();
-
-    #pragma omp parallel num_threads(num_procs)
-    {
-        start = omp_get_wtime();
-        num_x = 1.0/(double)STEPS;
-
-        #pragma omp for reduction (+:sum)
-            for(i = 0; i < STEPS; i++) {
-                x = i * num_x; //x = (a + i) * num_x (Largura)
-                sum = sum + 4.0 / (1.0 + x*x); // Área
-            }
-        pi = num_x * sum;
-    }
-
-    end = omp_get_wtime(); 
-    time = end - start;
-    printf("Valor de Pi: %f\n", pi);
-    printf("Parallel time: %f\n\n", time);
     
+    printf("Iniciando método paralelo...\n");
+    start = omp_get_wtime();
+    step = 1.0/(double)STEPS;
 
+    #pragma omp parallel private(x) num_threads(4)
+    {
+        #pragma omp for reduction(+:sum)
+            for(i = 0; i < STEPS; i++) {
+                x = i * step;
+                sum = sum + 4.0/(1.0 + x * x);
+            }
+        pi = step * sum;
+    }
+    
+    end = omp_get_wtime();
+    time = end - start;
+    printf("Pi: %f\n", pi);
+    printf("Tempo Paralelo: %f\n\n", time);
+    return time;
 }
 
 int main() {
-    setlocale(LC_ALL, "Portuguese");
-
-    int i;
-    double x, pi, sum = 0.0;
-
-    pi_Serial();
-    pi_Parallel();
-
+    printf("Calculando o valor de pi...\n\n");
+    double time = pi_sequencial()/pi_paralelo();
+    printf("Speedup: %f seconds\n", time);
+    printf("Eficiência: %f seconds\n", time/4);
 }

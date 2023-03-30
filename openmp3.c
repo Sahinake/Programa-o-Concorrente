@@ -25,7 +25,7 @@ double media_serial(int *vetor) {
     return time;
 }
 
-double media_paralela(int *vetor, int nprocs) {
+double media_paralela(int *vetor) {
     setlocale(LC_ALL, "Portuguese");
 
     int i; 
@@ -33,7 +33,7 @@ double media_paralela(int *vetor, int nprocs) {
     double start, end, time;
 
     start = omp_get_wtime();
-    #pragma omp parallel num_threads(nprocs)
+    #pragma omp parallel num_threads(4)
     {
         #pragma omp for reduction (+:soma)
             for(i = 0; i < 500000000; i++) {
@@ -51,14 +51,13 @@ int main() {
     srand(time(NULL));
     int i;
     int *vetor = malloc(500000000 * sizeof(int));
-    int nprocs = (int)omp_get_num_procs()/2;
 
     printf("Gerando valores aleatórios: \n\n");
     for(i = 0; i < 500000000; i++) {
         vetor[i] = random() % 100000;
     }
 
-    double time = media_serial(vetor)/media_paralela(vetor, nprocs);
+    double time = media_serial(vetor)/media_paralela(vetor);
     printf("Speedup: %f seconds\n", time);
     printf("Eficiência: %f seconds\n", time/4);
 
