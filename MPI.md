@@ -75,29 +75,32 @@ Calculada em paralelo, dividindo-se o intervalo de integração entre os process
 #include “mpi.h”
 #include <math.h>
 
-int main () { 
-    int n, myid, numprocs, i, rc;
+int main(argc,argv)
+int argc;
+char *argv[];
+{
+    int n = 0, myid, numprocs, i, rc;
     double mypi, pi, h, x, sum = 0.0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    MPI_COMM_rank(MPI_COMM_WORLD, &myid);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     if (myid == 0) {
-        printf (“Entre com o número de intervalos: ”);
-        scanf(“%d”, &n);
+        printf("Entre com o número de intervalos: ");
+        scanf("%d", &n);
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     if (n != 0) {
         h=1.0/(double) n;
-        for (i=myid +1; i <= n; i+=numprocs) {
-            x = h * ((double) i – 0.5);
+        for (i = myid + 1; i <= n; i += numprocs) {
+            x = h * ((double) i - 0.5);
             sum += (4.0/(1.0 + x*x));
         }
-        mpi = h* sum;
-        MPI_Reduce(&mypi, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_WORLD_COMM);
+        mypi = h* sum;
+        MPI_Reduce(&mypi, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         if (myid == 0)
-            printf (“valor aproximado de pi: %.16f \n”, pi);
+            printf ("valor aproximado de pi: %.16f \n", pi);
     }
     MPI_Finalize( );
 }
